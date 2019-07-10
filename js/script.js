@@ -2,30 +2,32 @@ const randomUserUrl = 'https://randomuser.me/api/?results=12&nat=us';
 const employeeDataArray = [];
 const employeeNames = [];
 const galleryDiv = document.getElementById('gallery');
-let modalDiv;
-let currentIndex;
+let modalDiv = [];
+let currentIndex = '';
+const modalHTMLArray = [];
+let cards;
 
-
-// Initial data fetch, calls generateEmployeeCard function with fetched JSON data
+// Initial data fetch, calls functions to use with fetched JSON data
 fetch(randomUserUrl)
     .then(response => response.json())
     .then(data => {
         employeeData = data.results;
         employeeDataArray.push(employeeData);
         generateEmployeeCard(employeeData);
+        search();
+        showOverlay();
     })
-    .then(showOverlay)
     .catch(err => {
         console.log('Error fetching employee data', err )
     });
     
 
-
 // Function maps over each employee data object and creates a card div with HTML for each employee
 function generateEmployeeCard(data) {
-    console.log(data)
-    data.map((employee, index) => {
+    // console.log(data)
+    data.map((employee) => {
         const employeeName = `${employee.name.first} ${employee.name.last}`;
+        // adds employee names to a new array for search functionality
         employeeNames.push(employeeName);
         const employeeEmail = `${employee.email}`;
         const employeePic = `${employee.picture.large}`;
@@ -48,11 +50,8 @@ function generateEmployeeCard(data) {
         galleryDiv.appendChild(cardDiv);
 
         // create modal pop-up & generate HTML. Default to display = none
-        modalDiv = document.createElement('div');
-        modalDiv.className = 'modal-container';
-        modalDiv.setAttribute('data-index', `${index}`);
-        modalDiv.style.display = 'none';
-        modalDiv.innerHTML = `
+
+        modalDivHTML = `
             <div class='modal'>
                 <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
                 <div class="modal-info-container">
@@ -71,47 +70,93 @@ function generateEmployeeCard(data) {
                 <button type="button" id="modal-next" class="modal-next btn">Next</button>
             </div>
         `;
-        galleryDiv.appendChild(modalDiv);
+        modalHTMLArray.push(modalDivHTML);
     })
+    modalDiv = document.createElement('div');
+    modalDiv.className = 'modal-container';
+    modalDiv.style.display = 'none';
+    galleryDiv.appendChild(modalDiv);
 }
 
-
-
 // function to display the modal corresponding to the click event target, and give functionality to its buttons
-function showOverlay() {
-    const cards = document.querySelectorAll('.card');
-    const modalDivs = document.querySelectorAll('.modal-container');
-    
-    //helper function to hide the modal divs when correct event target is clicked
-    const hideModalDivs = () => { 
-        modalDivs.forEach(div => {
-            div.style.display = 'none';
-        })
-    }
 
+function showOverlay() {
+    cards = document.querySelectorAll('.card'); 
+    // console.log(cards);
+    // let cardsShowing = cards.filter();
+    // console.log(cardsShowing);
+
+    // shows adds corresponding HTML to modalDiv based on selected card index
     cards.forEach((card, index) => {
         card.addEventListener('click', (e) => {
             currentIndex = index;
-            console.log(currentIndex);
-            modalDivs[currentIndex].style.display = 'block';
+            modalDiv.innerHTML = modalHTMLArray[currentIndex];
+            modalDiv.style.display = 'block';
         })
     })
 
-    // closes modal when X is clicked
-    const closeX = document.querySelector('.modal-close-btn');
-    closeX.forEach(x => {
-        x.addEventListener('click', () => {
-            hideModalDivs();
-        })
+    // gives functionality to modal buttons
+    modalDiv.addEventListener('click', (e) => {
+        let next = currentIndex + 1;
+        let prev = currentIndex - 1;
+        // decreases currentIndex and changes modalDiv HTML
+        if (e.target.id === 'modal-prev' || e.target.textContent === 'Prev') {
+            if (currentIndex > 0){
+                modalDiv.innerHTML = modalHTMLArray[prev];
+                currentIndex = prev;
+            } else {
+                currentIndex = 0;
+            }
+        // increases currentIndex and changes modalDiv HTML
+        } else if (e.target.id === 'modal-next' || e.target.textContent === 'Next') {
+            if (currentIndex === cards.length - 1){
+                currentIndex = cards.length - 1;
+            } else if (currentIndex < cards.length) {
+                modalDiv.innerHTML = modalHTMLArray[next];
+                currentIndex = next;
+            }
+        } 
+        // closes modal
+        else if( e.target.textContent === 'X' ) {
+            modalDiv.style.display = 'none';
+        }
     })
+};
+
+// adds search bar and gives functionality
+function search() {
+    
+    // create search box
+    const searchDiv = document.querySelector('.search-container');
+    const searchForm = document.createElement('form');
+    searchForm.setAttribute('action', '#');
+    searchForm.setAttribute('method', 'get');
+    searchForm.innerHTML = `
+        <input type="search" id="search-input" class="search-input" placeholder="Search...">
+        <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+    `;
+    searchDiv.appendChild(searchForm);
+
+    const searchInput = document.querySelector('#search-input');
+
+    // search function, to be called on certain events listed below
+    const searchFunc = () => {
+        const userSearch = searchInput.value.toLowerCase();
+        employeeNames.forEach((name, index) => {
+            if(name.toLowerCase().includes(userSearch)){
+                cards[index].style.display = 'block';
+            } else {
+                cards[index].style.display = 'none';
+            }
+        })
+    }
+
+    searchInput.addEventListener('keyup', () => {
+        searchFunc();
+    });
+    const searchSubmit = document.querySelector('#search-submit')
+    searchSubmit.addEventListener('click', () => {
+        searchFunc();
+    });
+
 }
-
-
-const modalPrev = document.querySelectorAll('.modal-prev');
-modalPrev.forEach((button) => {
-    button.addEventListener('click', () => {
-        console.log(currentIndex);
-        prev = currentIndex - 1;
-        console.log(currentIndex);
-    })
-})
