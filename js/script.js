@@ -24,7 +24,7 @@ fetch(randomUserUrl)
 
 // Function maps over each employee data object and creates a card div with HTML for each employee
 function generateEmployeeCard(data) {
-    // console.log(data)
+
     data.map((employee) => {
         const employeeName = `${employee.name.first} ${employee.name.last}`;
         // adds employee names to a new array for search functionality
@@ -82,9 +82,6 @@ function generateEmployeeCard(data) {
 
 function showOverlay() {
     cards = document.querySelectorAll('.card'); 
-    // console.log(cards);
-    // let cardsShowing = cards.filter();
-    // console.log(cardsShowing);
 
     // shows adds corresponding HTML to modalDiv based on selected card index
     cards.forEach((card, index) => {
@@ -144,7 +141,7 @@ function search() {
         const userSearch = searchInput.value.toLowerCase();
         employeeNames.forEach((name, index) => {
             if(name.toLowerCase().includes(userSearch)){
-                cards[index].style.display = 'block';
+                cards[index].style.display = 'flex';
             } else {
                 cards[index].style.display = 'none';
             }
